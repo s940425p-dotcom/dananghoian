@@ -92,8 +92,7 @@ body{background:#e8e3dc;font-family:'Noto Sans TC',sans-serif;color:var(--ink);d
 
 /* WEATHER WIDGET — compact dual city */
 .weather-dual{margin:10px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.weather-widget{border-radius:12px;padding:10px 11px;color:white;box-shadow:0 3px 10px rgba(0,0,0,.15);overflow:hidden}
-.weather-widget.danang{background:linear-gradient(135deg,#4a90b8,#7ab3cf)}
+.weather-widget{border-radius:12px;padding:10px 11px;color:white;box-shadow:0 3px 10px rgba(0,0,0,.15);overflow:hidden;background:linear-gradient(135deg,#5b9ec9,#82c0e0)}
 .weather-widget.hoian{background:linear-gradient(135deg,#b8943a,#d4af6a)}
 .weather-city{font-size:11px;font-weight:700;opacity:.95;margin-bottom:4px}
 .weather-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
@@ -443,9 +442,9 @@ body{background:#e8e3dc;font-family:'Noto Sans TC',sans-serif;color:var(--ink);d
       <div class="prepay-body" id="prepayBody">
         <div class="prepay-total" id="prepayTotalText">合計：0 VND（≈ TWD 0）</div>
         <div class="log-add">
-          <input class="log-input" id="prepayName" type="text" placeholder="項目（如：住宿費）"/>
+          <input class="log-input" id="prepayName" type="text" placeholder="項目（如：住宿費 TWD）"/>
           <div class="log-amount-wrap">
-            <select class="log-currency-sel" id="prepayCurrency"><option value="VND">VND</option><option value="TWD">TWD</option></select>
+            <select class="log-currency-sel" id="prepayCurrency"><option value="TWD">TWD</option><option value="VND">VND</option></select>
             <input class="log-amount" id="prepayAmt" type="number" placeholder="0"/>
           </div>
           <button class="log-btn" style="background:var(--sand)" onclick="addPrepay()"><i class="fa-solid fa-plus"></i></button>
@@ -650,7 +649,7 @@ const WI={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',5
 const WD={0:'晴朗',1:'大致晴',2:'局部多雲',3:'陰天',45:'薄霧',51:'毛毛雨',61:'小雨',63:'中雨',65:'大雨',80:'陣雨',81:'中陣雨',95:'雷陣雨'};
 const WEATHER_CITIES={
   hoian:{lat:15.8801,lon:108.338,label:'🏮 會安',cls:'hoian'},
-  danang:{lat:16.047,lon:108.2062,label:'🌊 峴港',cls:''},
+  danang:{lat:16.047,lon:108.2062,label:'🌊 峴港',cls:'danang'},
 };
 const weatherCache={};
 async function fetchWeatherForCity(key){
