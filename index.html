@@ -165,6 +165,8 @@ body{background:#e8e3dc;font-family:'Noto Sans TC',sans-serif;color:var(--ink);d
 .food-map-btn{display:flex;align-items:center;gap:3px;padding:4px 9px;border-radius:50px;background:var(--blue-bg);border:1px solid var(--blue-l);color:var(--blue);font-size:11px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;transition:all .18s;font-family:'Noto Sans TC',sans-serif}
 .food-map-btn:hover{background:var(--blue);color:white;border-color:var(--blue)}
 .food-map-btn i{font-size:10px}
+.food-acc-btn{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--pink-bg);border:1px solid var(--pink-l);font-size:13px;cursor:pointer;transition:all .18s;flex-shrink:0}
+.food-acc-btn:hover{background:var(--pink);}
 .food-radar-footer{padding:6px 8px 9px;text-align:center;font-size:11px;color:var(--ink-faint);border-top:1px dashed var(--border);margin-top:3px}
 
 /* OVERVIEW */
@@ -423,13 +425,16 @@ body{background:#e8e3dc;font-family:'Noto Sans TC',sans-serif;color:var(--ink);d
         <span class="log-day-badge" id="logDayBadge">Day 1</span>
       </div>
       <div class="log-add">
-        <input class="log-input" id="logName" type="text" placeholder="今日消費項目"/>
+        <input class="log-input" id="logName" type="text" placeholder="今日消費項目（可自由輸入）"/>
         <div class="log-amount-wrap">
           <select class="log-currency-sel" id="logCurrency"><option value="VND">VND</option><option value="TWD">TWD</option></select>
           <input class="log-amount" id="logAmt" type="number" placeholder="0"/>
         </div>
         <button class="log-btn" onclick="addLog()"><i class="fa-solid fa-plus"></i></button>
       </div>
+      <button onclick="focusLogName()" style="width:100%;margin-bottom:10px;padding:8px;border:1.5px dashed var(--border);border-radius:9px;background:var(--paper-warm);color:var(--ink-light);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-light)'">
+        <i class="fa-solid fa-plus"></i> 新增自訂消費項目
+      </button>
       <div class="log-list" id="logList"><div class="empty-state"><i class="fa-regular fa-receipt"></i>今日尚無消費記錄</div></div>
     </div>
 
@@ -704,12 +709,6 @@ function renderWeather(){
   c.innerHTML=`<div class="weather-dual">${buildCityWeatherHTML(weatherCache.hoian,'hoian')}${buildCityWeatherHTML(weatherCache.danang,'danang')}</div>`;
 }
 
-// ── Food DB ──
-const CITY={hoian:'Hoi An Vietnam',danang:'Da Nang Vietnam'};
-function mapUrl(name,region,url){
-  if(url) return url;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name+' '+CITY[region])}`;
-}
 const foodDB={
   hoian:{
     meals:[
@@ -988,6 +987,13 @@ function saveDiary(dayId){
   LS.save();
 }
 
+// ── Food DB ──
+const CITY_EN={hoian:'Hoi An Vietnam',danang:'Da Nang Vietnam'};
+function mapUrl(name,region,url){
+  if(url) return url;
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(name+' '+CITY_EN[region]);
+}
+
 // ── Food Radar ──
 function renderFoodRadar(day){
   const db=foodDB[day.region];
@@ -998,7 +1004,10 @@ function renderFoodRadar(day){
   const items=db[tab].map((item,i)=>{
     const key=`${day.id}_${tab}_${i}`;
     const picked=!!pickedFood[key];
+    // Build map href safely — always encoded
     const href=mapUrl(item.name,day.region,item.url);
+    // Escape name for fill-log (remove quotes to be safe)
+    const safeName=item.name.replace(/'/g,'&#39;').replace(/"/g,'&quot;');
     return `<div class="food-item${picked?' picked':''}" onclick="toggleFood('${key}')">
       <div class="food-item-num">${i+1}</div>
       <div class="food-item-body">
@@ -1007,6 +1016,7 @@ function renderFoodRadar(day){
       </div>
       <div class="food-item-actions">
         <i class="fa-solid fa-circle-check food-item-check"></i>
+        <button class="food-acc-btn" onclick="event.stopPropagation();fillLog('${safeName}')" title="填入記帳">💰</button>
         <a class="food-map-btn" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fa-solid fa-location-dot"></i> 地圖</a>
       </div>
     </div>`;
@@ -1019,7 +1029,7 @@ function renderFoodRadar(day){
       <div class="food-tab${tab==='spots'?' active':''}" onclick="setFoodTab(${day.id},'spots')">🛍️ 逛</div>
     </div>
     <div class="food-list">${items}</div>
-    <div class="food-radar-footer">點擊卡片 ✓ 標記今日首選 · 點「地圖」開啟 Google Maps</div>
+    <div class="food-radar-footer">✓ 標記首選 · 💰 帶入記帳 · 地圖導航</div>
   </div>`;
 }
 function setFoodTab(dayId,tab){activeFoodTab[dayId]=tab;renderDay(dayId);}
@@ -1065,6 +1075,29 @@ function updateBudget(){
   document.getElementById('spentPct').textContent=pct+'%';
   document.getElementById('progressFill').style.width=pct+'%';
   document.getElementById('prepayTotalText').textContent=`合計：${fmt(pv)} VND（≈ TWD ${fmt(pv/RATE)}）`;
+}
+
+// Fill log name from food radar
+function fillLog(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-budget').classList.add('active');
+  document.querySelectorAll('.nav-btn')[2].classList.add('active');
+  setTimeout(()=>{
+    const el=document.getElementById('logName');
+    if(el){el.value=name;}
+    const amt=document.getElementById('logAmt');
+    if(amt){amt.focus();}
+    document.getElementById('scrollArea').scrollTo({top:0,behavior:'smooth'});
+  },60);
+}
+// Focus log name for custom entry
+function focusLogName(){
+  const el=document.getElementById('logName');
+  if(!el)return;
+  el.value='';
+  el.focus();
+  el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 // ── Daily logs ──
